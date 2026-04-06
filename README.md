@@ -2,24 +2,55 @@
 
 **AI coding agent in your terminal. Works with any LLM.**
 
-DeepSeek, Qwen, GPT-4o, Claude, Gemini, Kimi, GLM, Ollama local models - pick your favorite and start coding.
+[![PyPI](https://img.shields.io/pypi/v/anycoder)](https://pypi.org/project/anycoder/)
+[![Python](https://img.shields.io/badge/python-3.10+-blue)](https://python.org)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Tests](https://github.com/he-yufeng/AnyCoder/actions/workflows/ci.yml/badge.svg)](https://github.com/he-yufeng/AnyCoder/actions)
 
 [中文文档](README_CN.md) | [Installation](#installation) | [Quick Start](#quick-start) | [Supported Models](#supported-models)
 
+DeepSeek, Qwen, GPT-5, Claude, Gemini, Kimi, GLM, Ollama local models - pick your favorite and start coding.
+
+---
+
+```
+$ anycoder -m deepseek
+
+> read main.py and fix the broken import
+
+  Reading main.py
+  ╭──────────────────────────────────────╮
+  │ [6 lines total]                      │
+  │      1  from utils import halper     │
+  │      ...                             │
+  ╰──────────────────────────────────────╯
+
+  Editing main.py
+  ╭──────────────────────────────────────╮
+  │ Replaced 1 occurrence(s) in main.py  │
+  ╰──────────────────────────────────────╯
+
+Fixed: halper → helper.
+
+  deepseek-chat | tokens: 1,247 | cost: $0.0004
+```
+
 ## Why AnyCoder?
 
-Claude Code is powerful but locked to Anthropic's API. Most AI coding tools force you into one provider.
+Claude Code is the best AI coding tool out there, but it only works with Anthropic's API. Want to use DeepSeek (cheap and fast)? Qwen (great for Chinese devs)? A local model via Ollama? You're out of luck.
 
-AnyCoder gives you the same agent experience - file editing, shell commands, codebase search - with **whatever LLM you want**. Got cheap DeepSeek credits? Use those. Company provides Qwen access? Works too. Want everything local with Ollama? Go ahead.
+AnyCoder gives you the same experience - file editing, shell commands, codebase search, context management - with **whatever LLM you want**.
 
-**Key features:**
+**What it does:**
 
-- **100+ LLM providers** via [litellm](https://github.com/BerriAI/litellm) - one interface, any model
-- **Tool-use agent loop** - reads files, writes code, runs commands, searches codebases
-- **Streaming output** - see responses as they generate
-- **Context management** - automatic compression when conversations get long
-- **Search & replace editing** - precise file modifications, not blind overwrites
-- **Zero config** - set an API key and go. `pip install anycoder && anycoder`
+- **100+ LLM providers** via [litellm](https://github.com/BerriAI/litellm) - one CLI, any model
+- **Agent loop with tool use** - reads files, writes code, runs commands, searches codebases
+- **Streaming output** - see responses as they generate, token by token
+- **Context compression** - auto-compresses when conversations get long (snip tool outputs first, then summarize)
+- **Search & replace editing** - precise modifications with uniqueness checking, not blind overwrites
+- **Session persistence** - save and resume conversations with `/save` and `--resume`
+- **`.env` support** - drop a `.env` in your project root and go
+- **~1,300 lines of Python** - small enough to read, hack, and extend
 
 ## Installation
 
@@ -31,7 +62,7 @@ pip install anycoder
 
 ```bash
 # Set your API key (pick one)
-export DEEPSEEK_API_KEY=sk-...    # DeepSeek (default)
+export DEEPSEEK_API_KEY=sk-...    # DeepSeek (default model)
 export OPENAI_API_KEY=sk-...      # OpenAI
 export ANTHROPIC_API_KEY=sk-...   # Claude
 export GEMINI_API_KEY=...         # Gemini
@@ -41,11 +72,24 @@ anycoder
 
 # Or specify a model
 anycoder -m claude
-anycoder -m gpt4o
+anycoder -m gpt5
 anycoder -m deepseek
+anycoder -m qwen
 
 # One-shot mode
 anycoder "add error handling to the login function in auth.py"
+anycoder -p "find all TODO comments and list them"
+
+# Resume a saved session
+anycoder --resume session_1712345678
+```
+
+Or use a `.env` file in your project root:
+
+```bash
+# .env
+DEEPSEEK_API_KEY=sk-...
+ANYCODER_MODEL=deepseek
 ```
 
 ## Supported Models
@@ -54,37 +98,33 @@ Use short aliases or full [litellm model names](https://docs.litellm.ai/docs/pro
 
 | Alias | Model | Provider |
 |-------|-------|----------|
-| `deepseek` | DeepSeek Chat | DeepSeek |
-| `deepseek-r1` | DeepSeek Reasoner | DeepSeek |
+| `deepseek` | DeepSeek Chat (V3) | DeepSeek |
+| `deepseek-r1` | DeepSeek Reasoner (R1) | DeepSeek |
+| `gpt5` / `gpt-5` | GPT-5.4 | OpenAI |
+| `gpt4o` | GPT-4o | OpenAI |
+| `o4-mini` | o4-mini | OpenAI |
+| `claude` | Claude Sonnet 4.6 | Anthropic |
+| `claude-opus` | Claude Opus 4.6 | Anthropic |
+| `claude-haiku` | Claude Haiku 4.5 | Anthropic |
+| `gemini` | Gemini 2.5 Flash | Google |
+| `gemini-pro` | Gemini 2.5 Pro | Google |
 | `qwen` | Qwen Plus | Alibaba |
 | `qwen-max` | Qwen Max | Alibaba |
-| `gpt4o` | GPT-4o | OpenAI |
-| `gpt-4o-mini` | GPT-4o Mini | OpenAI |
-| `claude` | Claude Sonnet 4 | Anthropic |
-| `claude-opus` | Claude Opus 4 | Anthropic |
-| `gemini` | Gemini 2.0 Flash | Google |
-| `gemini-pro` | Gemini 2.5 Pro | Google |
-| `kimi` | Moonshot v1 | Moonshot AI |
+| `kimi` | Kimi K2.5 | Moonshot AI |
 | `glm` | GLM-4 Plus | Zhipu AI |
-| `o1` | o1 | OpenAI |
-| `o3-mini` | o3-mini | OpenAI |
 
 ### Local Models (Ollama)
 
 ```bash
-# Make sure Ollama is running
 ollama serve
-
-# Use any Ollama model
 anycoder -m ollama/llama3.1
 anycoder -m ollama/codestral
-anycoder -m ollama/deepseek-coder-v2
+anycoder -m ollama/qwen3:32b
 ```
 
 ### Custom OpenAI-Compatible APIs
 
 ```bash
-# Any provider with an OpenAI-compatible endpoint
 export ANYCODER_API_BASE=https://your-api.com/v1
 export ANYCODER_API_KEY=your-key
 anycoder -m your-model-name
@@ -92,62 +132,75 @@ anycoder -m your-model-name
 
 ## Tools
 
-AnyCoder has 6 built-in tools that the LLM can use:
+AnyCoder has 6 built-in tools that the LLM calls automatically:
 
-| Tool | Description |
+| Tool | What it does |
 |------|-------------|
-| `bash` | Execute shell commands (tests, git, installs, builds) |
-| `read_file` | Read files with line numbers, supports offset/limit for large files |
+| `bash` | Run shell commands - tests, git, installs, builds |
+| `read_file` | Read files with line numbers, offset/limit for large files |
 | `write_file` | Create new files or overwrite existing ones |
 | `edit_file` | Search-and-replace edits with uniqueness checking |
 | `glob` | Find files by pattern (`**/*.py`, `src/**/*.ts`) |
 | `grep` | Search file contents with regex |
 
-The agent decides which tools to use based on your request. You just describe what you want in natural language.
+You describe what you want in natural language. The agent decides which tools to use.
 
 ## Commands
 
-Inside the REPL:
-
 | Command | Description |
 |---------|-------------|
-| `/help` | Show available commands |
+| `/model` | Show current model |
 | `/model <name>` | Switch model mid-conversation |
 | `/models` | List all model aliases |
+| `/tokens` | Token usage and estimated cost |
+| `/diff` | Files modified this session |
+| `/compact` | Manually compress context |
+| `/save [name]` | Save session to disk |
+| `/sessions` | List saved sessions |
 | `/clear` | Clear conversation history |
-| `/cost` | Show token usage and estimated cost |
+| `/help` | Show all commands |
 | `/quit` | Exit |
+
+**Input:** Enter to send, Esc+Enter for newline (multiline input), Ctrl+C to cancel, Ctrl+D to exit.
 
 ## Architecture
 
+~1,300 lines total. Here's how it's organized:
+
 ```
-User Input
-    ↓
-┌─────────┐     ┌──────────┐     ┌───────────┐
-│   CLI   │ ──→ │  Agent   │ ──→ │    LLM    │
-│  (REPL) │     │  (Loop)  │     │ (litellm) │
-└─────────┘     └──────────┘     └───────────┘
-                     ↓  ↑
-                ┌──────────┐
-                │  Tools   │
-                │ bash     │
-                │ read     │
-                │ write    │
-                │ edit     │
-                │ glob     │
-                │ grep     │
-                └──────────┘
+anycoder/
+├── cli.py            REPL + slash commands          258 lines
+├── llm.py            litellm streaming wrapper      185 lines
+├── agent.py          Agent loop + tool execution    151 lines
+├── context.py        Two-phase compression           92 lines
+├── config.py         Env + .env + model aliases      86 lines
+├── session.py        Save/resume sessions            60 lines
+├── prompts/system.py System prompt generation        50 lines
+└── tools/
+    ├── bash.py       Shell execution                 56 lines
+    ├── edit_file.py  Search-replace + tracking       81 lines
+    ├── grep_tool.py  Regex content search            84 lines
+    ├── read_file.py  File reading                    58 lines
+    ├── glob_tool.py  File pattern search             48 lines
+    └── write_file.py File writing + tracking         39 lines
 ```
 
-The agent loop:
-1. Send conversation history + tool schemas to LLM
-2. If LLM returns text → display to user
-3. If LLM returns tool calls → execute tools, append results, go to step 1
-4. Context manager compresses old messages when approaching token limit
+**How the agent loop works:**
+
+1. User message gets added to conversation history
+2. History + tool schemas are sent to the LLM (streaming)
+3. If the LLM returns text, it's printed to the terminal
+4. If the LLM returns tool calls, each tool is executed and results are appended
+5. Go to step 2 until the LLM responds with text only (no more tool calls)
+6. Context manager auto-compresses when approaching the token limit
+
+**Two-phase compression** (inspired by Claude Code):
+- Phase 1: Snip long tool outputs (keeps conversation structure intact)
+- Phase 2: Summarize old conversation turns if still over threshold
 
 ## Configuration
 
-All configuration via environment variables:
+Environment variables or `.env` file:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
@@ -159,20 +212,29 @@ All configuration via environment variables:
 | `ANTHROPIC_API_KEY` | Anthropic API key | - |
 | `GEMINI_API_KEY` | Google AI API key | - |
 
-## Comparison with Claude Code
+## Use as a Library
 
-| Feature | Claude Code | AnyCoder |
-|---------|------------|----------|
-| LLM Support | Claude only | 100+ models |
-| Language | TypeScript | Python |
-| Install | `npm` | `pip` |
-| File editing | Search & replace | Search & replace |
-| Shell commands | Yes | Yes |
-| Codebase search | Yes | Yes (glob + grep) |
-| Streaming | Yes | Yes |
-| Context compression | Yes | Yes |
-| Cost | Claude API pricing | Your choice |
-| Open source | Partially | Fully (MIT) |
+```python
+from anycoder import Agent, Config
+
+config = Config(model="deepseek/deepseek-chat", api_key="sk-...")
+agent = Agent(config)
+agent.run("find all TODO comments in this project")
+```
+
+## Comparison
+
+| Feature | Claude Code | Cline | Aider | **AnyCoder** |
+|---------|-------------|-------|-------|-------------|
+| LLM support | Claude only | Multi | Multi | **100+ via litellm** |
+| Language | TypeScript (closed) | TypeScript | Python | **Python (MIT)** |
+| Install | `npm` | VS Code ext | `pip` | **`pip`** |
+| File editing | Search & replace | Diff | Diff | **Search & replace** |
+| Context compression | Yes | No | Yes | **Yes (two-phase)** |
+| Streaming | Yes | Yes | Yes | **Yes** |
+| Session persistence | Yes | No | Yes | **Yes** |
+| Code size | 512K lines | 100K+ | 50K+ | **~1,300 lines** |
+| Best for | Using it | Using it | Using it | **Using it AND reading the source** |
 
 ## Development
 
@@ -180,14 +242,17 @@ All configuration via environment variables:
 git clone https://github.com/he-yufeng/AnyCoder.git
 cd AnyCoder
 pip install -e ".[dev]"
+pytest tests/ -v
 ```
 
-## Acknowledgements
+## Related Projects
 
-Inspired by [Claude Code](https://docs.anthropic.com/en/docs/claude-code)'s architecture. Built with [litellm](https://github.com/BerriAI/litellm) for universal LLM support and [Rich](https://github.com/Textualize/rich) for terminal rendering.
-
-Also check out my other project [CoreCoder](https://github.com/he-yufeng/CoreCoder) - a 1,300-line Python distillation of Claude Code's 510K-line source, with architecture deep dives.
+- [CoreCoder](https://github.com/he-yufeng/CoreCoder) - my other project: Claude Code's 512K-line source distilled into ~1,400 lines of Python, with 7 architecture deep-dive articles. AnyCoder builds on the same ideas but focuses on being a practical tool (litellm, session persistence, .env support) rather than a teaching codebase.
 
 ## License
 
-MIT
+MIT. Use it, fork it, build something better.
+
+---
+
+Built by **[Yufeng He](https://github.com/he-yufeng)** · Agentic AI Researcher @ Moonshot AI (Kimi)

@@ -3,6 +3,9 @@
 import os
 from anycoder.tools.base import BaseTool
 
+# module-level set to track which files got modified this session
+_changed_files: set[str] = set()
+
 
 class EditFileTool(BaseTool):
     name = "edit_file"
@@ -73,5 +76,6 @@ class EditFileTool(BaseTool):
         except Exception as e:
             return f"[error] {e}"
 
+        _changed_files.add(os.path.abspath(path))
         replacements = count if replace_all else 1
         return f"Replaced {replacements} occurrence(s) in {file_path}"

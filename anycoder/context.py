@@ -1,6 +1,13 @@
-"""Context window management - keeps conversations within token limits."""
+"""Context window management - keeps conversations within token limits.
+
+Two-phase compression (inspired by Claude Code):
+  1. Snip long tool outputs first (cheap, keeps conversation structure)
+  2. Summarize old conversation turns if still over threshold
+"""
 
 from anycoder.llm import LLMClient
+
+_TOOL_SNIP_THRESHOLD = 8000
 
 
 class ContextManager:
@@ -26,41 +33,57 @@ class ContextManager:
         return self.token_count > int(self.max_tokens * self.compress_threshold)
 
     def compress(self):
-        """
-        Compress older messages by summarizing them.
-        Keeps the system prompt and recent messages intact.
-        """
-        if len(self.messages) < 4:
+        """Snip tool outputs first, then summarize old turns if needed."""
+        self._snip_tool_outputs()
+        if self.needs_compression():
+            self._summarize_old()
+
+    def _snip_tool_outputs(self):
+        """Truncate long tool results, keeping head + tail."""
+        cutoff = max(0, len(self.messages) - 6)
+        for i in range(cutoff):
+            msg = self.messages[i]
+            if msg.get("role") != "tool":
+                continue
+            content = msg.get("content", "")
+            if not isinstance(content, str) or len(content) <= _TOOL_SNIP_THRESHOLD:
+                continue
+            half = _TOOL_SNIP_THRESHOLD // 2
+            snipped = (
+                content[:half]
+                + f"\n\n[truncated {len(content)} -> {_TOOL_SNIP_THRESHOLD} chars]\n\n"
+                + content[-half:]
+            )
+            self.messages[i] = {**msg, "content": snipped}
+
+    def _summarize_old(self):
+        """Replace old messages with a compressed summary."""
+        if len(self.messages) < 6:
             return
 
-        # always keep: system prompt (index 0) and last few turns
-        keep_recent = 6  # last 3 pairs of user/assistant
         system = self.messages[0] if self.messages[0]["role"] == "system" else None
-        recent = self.messages[-keep_recent:]
-        middle = self.messages[1:-keep_recent] if system else self.messages[:-keep_recent]
+        recent = self.messages[-6:]
+        start = 1 if system else 0
+        middle = self.messages[start:-6]
 
         if not middle:
             return
 
-        # build a summary of the middle section
-        summary_parts = []
+        parts = []
         for msg in middle:
             role = msg["role"]
             content = msg.get("content", "")
             if isinstance(content, str) and content.strip():
-                # truncate long content
-                preview = content[:200] + "..." if len(content) > 200 else content
-                summary_parts.append(f"[{role}]: {preview}")
+                preview = content[:300] + "..." if len(content) > 300 else content
+                parts.append(f"[{role}] {preview}")
+            elif role == "assistant" and msg.get("tool_calls"):
+                names = [tc["function"]["name"] for tc in msg.get("tool_calls", [])]
+                parts.append(f"[assistant] called: {', '.join(names)}")
             elif role == "tool":
-                tool_name = msg.get("name", "unknown")
-                summary_parts.append(f"[tool result from {tool_name}]")
+                parts.append("[tool result]")
 
-        summary_text = (
-            "[Earlier conversation compressed]\n"
-            + "\n".join(summary_parts[-10:])  # keep last 10 items of summary
-        )
-
-        compressed = [{"role": "assistant", "content": summary_text}]
+        summary = "[Conversation compressed]\n" + "\n".join(parts[-15:])
+        compressed = [{"role": "assistant", "content": summary}]
         self.messages = ([system] if system else []) + compressed + recent
 
     def reset(self):

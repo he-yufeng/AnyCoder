@@ -2,6 +2,7 @@
 
 import os
 from anycoder.tools.base import BaseTool
+from anycoder.tools.edit_file import _changed_files
 
 
 class WriteFileTool(BaseTool):
@@ -31,6 +32,7 @@ class WriteFileTool(BaseTool):
             os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
             with open(path, "w", encoding="utf-8") as f:
                 f.write(content)
+            _changed_files.add(os.path.abspath(path))
             line_count = content.count("\n") + (1 if content and not content.endswith("\n") else 0)
             return f"Wrote {line_count} lines to {file_path}"
         except Exception as e:

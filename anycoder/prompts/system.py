@@ -35,6 +35,12 @@ You have access to tools for reading, writing, editing files, running shell comm
 - **glob**: Find files by name pattern
 - **grep**: Search file contents with regex
 
+## Safety
+
+- Never run destructive commands (rm -rf /, drop database, etc.) without explicit confirmation.
+- Don't execute commands that could expose secrets or credentials.
+- Prefer reversible operations over irreversible ones.
+
 ## Environment
 
 - Working directory: {cwd}

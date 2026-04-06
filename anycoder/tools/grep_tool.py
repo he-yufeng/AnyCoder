@@ -56,7 +56,7 @@ class GrepTool(BaseTool):
         match_count = 0
         for fpath in files:
             if match_count >= 500:
-                results.append(f"\n... stopping at 500 matches")
+                results.append("\n... stopping at 500 matches")
                 break
             file_result = self._search_file(fpath, regex)
             if file_result:

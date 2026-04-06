@@ -1,10 +1,8 @@
 """Core agent loop - the brain that ties LLM, tools, and context together."""
 
 import json
-from typing import Generator
 
 from rich.console import Console
-from rich.markdown import Markdown
 from rich.panel import Panel
 
 from anycoder.llm import LLMClient
