@@ -3,10 +3,12 @@
 import os
 import re
 import subprocess
+import threading
 from anycoder.tools.base import BaseTool
 
 # track cwd across commands so `cd src && ls` works as expected
 _cwd: str | None = None
+_cwd_lock = threading.Lock()
 
 # patterns that could wreck the filesystem or leak secrets
 _DANGEROUS_PATTERNS = [
@@ -40,7 +42,8 @@ def _update_cwd(command: str, current_cwd: str):
             if target:
                 new_dir = os.path.normpath(os.path.join(current_cwd, os.path.expanduser(target)))
                 if os.path.isdir(new_dir):
-                    _cwd = new_dir
+                    with _cwd_lock:
+                        _cwd = new_dir
 
 
 class BashTool(BaseTool):
@@ -66,8 +69,6 @@ class BashTool(BaseTool):
     }
 
     def execute(self, command: str, timeout: int = 120, **kwargs) -> str:
-        global _cwd
-
         # safety check
         warning = _check_dangerous(command)
         if warning:
@@ -77,7 +78,8 @@ class BashTool(BaseTool):
                 "If intentional, modify the command to be more specific."
             )
 
-        cwd = _cwd or os.getcwd()
+        with _cwd_lock:
+            cwd = _cwd or os.getcwd()
 
         try:
             result = subprocess.run(

@@ -275,3 +275,85 @@ def test_context_snip_tool_outputs():
     for msg in ctx.messages[1:-6]:
         if msg["role"] == "tool":
             assert len(msg["content"]) <= _TOOL_SNIP_THRESHOLD + 200  # some overhead for the truncation message
+
+
+def test_context_summarize_old():
+    """Old messages should be summarized when compress() is called."""
+    from anycoder.context import ContextManager
+
+    class FakeLLM:
+        def count_tokens(self, messages):
+            return 999_999  # always over threshold
+
+    ctx = ContextManager(llm=FakeLLM(), max_tokens=1000, compress_threshold=0.5)
+    ctx.add({"role": "system", "content": "system prompt"})
+    for i in range(20):
+        ctx.add({"role": "user", "content": f"user message {i}"})
+        ctx.add({"role": "assistant", "content": f"assistant reply {i}"})
+
+    before = len(ctx.messages)
+    ctx.compress()
+    after = len(ctx.messages)
+    assert after < before
+    # system prompt should still be first
+    assert ctx.messages[0]["role"] == "system"
+
+
+def test_context_handles_none_content():
+    """Assistant messages with content=None should not crash compression."""
+    from anycoder.context import ContextManager
+
+    class FakeLLM:
+        def count_tokens(self, messages):
+            return 999_999
+
+    ctx = ContextManager(llm=FakeLLM(), max_tokens=1000, compress_threshold=0.5)
+    ctx.add({"role": "system", "content": "system"})
+    for i in range(10):
+        ctx.add({"role": "user", "content": f"msg {i}"})
+        # assistant with tool_calls often has content=None
+        ctx.add({"role": "assistant", "content": None, "tool_calls": [
+            {"id": f"c{i}", "type": "function", "function": {"name": "bash", "arguments": "{}"}}
+        ]})
+        ctx.add({"role": "tool", "tool_call_id": f"c{i}", "content": "ok"})
+
+    ctx.compress()  # should not crash
+    assert ctx.messages[0]["role"] == "system"
+
+
+# --- read_file offset/limit ---
+
+def test_read_file_with_offset_limit():
+    tool = TOOL_MAP["read_file"]
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
+        for i in range(100):
+            f.write(f"line {i}\n")
+        f.flush()
+        result = tool.execute(file_path=f.name, offset=10, limit=5)
+        assert "showing lines 11-15" in result
+        assert "line 10" in result  # 0-indexed line 10 = "line 10"
+        assert "line 0" not in result
+        os.unlink(f.name)
+
+
+# --- grep skips junk dirs ---
+
+def test_grep_skips_pycache():
+    """Grep should not search inside __pycache__ directories."""
+    tool = TOOL_MAP["grep"]
+    # search for "import" in the anycoder package dir - should find results
+    # but none from __pycache__
+    result = tool.execute(pattern="import", path="anycoder")
+    assert "__pycache__" not in result
+
+
+# --- bash dangerous patterns ---
+
+def test_bash_mkfs_blocked():
+    tool = TOOL_MAP["bash"]
+    assert "Blocked" in tool.execute(command="mkfs.ext4 /dev/sda1")
+
+
+def test_bash_fork_bomb_blocked():
+    tool = TOOL_MAP["bash"]
+    assert "Blocked" in tool.execute(command=":(){ :|:& };:")

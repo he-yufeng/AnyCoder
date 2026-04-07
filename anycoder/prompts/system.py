@@ -28,12 +28,12 @@ You have access to tools for reading, writing, editing files, running shell comm
 
 ## Tool Usage
 
-- **bash**: Run shell commands (tests, git, installs, etc.)
-- **read_file**: Read file contents with line numbers
+- **bash**: Run shell commands (tests, git, installs, etc.). Dangerous commands are blocked automatically.
+- **read_file**: Read file contents with line numbers. Binary files are rejected.
 - **write_file**: Create new files or overwrite existing ones
-- **edit_file**: Search-and-replace edits to existing files (preferred for modifications)
+- **edit_file**: Search-and-replace edits (preferred for modifications). Returns a unified diff showing what changed.
 - **glob**: Find files by name pattern
-- **grep**: Search file contents with regex
+- **grep**: Search file contents with regex. Skips binary files and .git/node_modules directories.
 
 ## Safety
 

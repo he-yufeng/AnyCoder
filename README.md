@@ -27,7 +27,12 @@ $ anycoder -m deepseek
 
   Editing main.py
   ╭──────────────────────────────────────╮
-  │ Replaced 1 occurrence(s) in main.py  │
+  │ Edited main.py                       │
+  │ --- a/main.py                        │
+  │ +++ b/main.py                        │
+  │ @@ -1 +1 @@                          │
+  │ -from utils import halper             │
+  │ +from utils import helper             │
   ╰──────────────────────────────────────╯
 
 Fixed: halper → helper.
