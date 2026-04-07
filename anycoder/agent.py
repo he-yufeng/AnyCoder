@@ -1,6 +1,7 @@
 """Core agent loop - the brain that ties LLM, tools, and context together."""
 
 import json
+import concurrent.futures
 
 from rich.console import Console
 from rich.panel import Panel
@@ -91,9 +92,11 @@ class Agent:
             ]
             self.ctx.add(assistant_msg)
 
-            # execute each tool
-            for tc in tool_calls:
-                self._execute_tool(tc)
+            # execute tools (parallel when multiple, like Claude Code's StreamingToolExecutor)
+            if len(tool_calls) == 1:
+                self._execute_tool(tool_calls[0])
+            else:
+                self._execute_tools_parallel(tool_calls)
 
         console.print(f"[yellow]Hit iteration limit ({self.config.max_iterations})[/yellow]")
 
@@ -108,13 +111,11 @@ class Agent:
             result = f"[error] Unknown tool: {name}"
             console.print(f"[red]Unknown tool: {name}[/red]")
         else:
-            # show what we're about to do
             self._print_tool_header(name, args)
             try:
                 result = tool.execute(**args)
             except Exception as e:
                 result = f"[error] Tool execution failed: {e}"
-
             self._print_tool_result(name, result)
 
         self.ctx.add({
@@ -122,6 +123,33 @@ class Agent:
             "tool_call_id": call_id,
             "content": result,
         })
+
+    def _execute_tools_parallel(self, tool_calls: list[dict]):
+        """Run multiple tool calls concurrently using threads."""
+        # print all headers first
+        for tc in tool_calls:
+            self._print_tool_header(tc["name"], tc["arguments"])
+
+        def _run_one(tc):
+            tool = TOOL_MAP.get(tc["name"])
+            if not tool:
+                return f"[error] Unknown tool: {tc['name']}"
+            try:
+                return tool.execute(**tc["arguments"])
+            except Exception as e:
+                return f"[error] Tool execution failed: {e}"
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
+            futures = [pool.submit(_run_one, tc) for tc in tool_calls]
+            results = [f.result() for f in futures]
+
+        for tc, result in zip(tool_calls, results):
+            self._print_tool_result(tc["name"], result)
+            self.ctx.add({
+                "role": "tool",
+                "tool_call_id": tc["id"],
+                "content": result,
+            })
 
     def _print_tool_header(self, name: str, args: dict):
         """Show a compact header for the tool being executed."""

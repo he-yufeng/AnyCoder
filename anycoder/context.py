@@ -72,7 +72,7 @@ class ContextManager:
         parts = []
         for msg in middle:
             role = msg["role"]
-            content = msg.get("content", "")
+            content = msg.get("content") or ""
             if isinstance(content, str) and content.strip():
                 preview = content[:300] + "..." if len(content) > 300 else content
                 parts.append(f"[{role}] {preview}")

@@ -1,10 +1,26 @@
-"""Search-and-replace editing, inspired by Claude Code's approach."""
+"""Search-and-replace editing with diff output."""
 
+import difflib
 import os
 from anycoder.tools.base import BaseTool
 
-# module-level set to track which files got modified this session
+# track which files got modified this session
 _changed_files: set[str] = set()
+
+
+def _unified_diff(old: str, new: str, filename: str, context: int = 3) -> str:
+    """Generate a compact unified diff."""
+    old_lines = old.splitlines(keepends=True)
+    new_lines = new.splitlines(keepends=True)
+    diff = difflib.unified_diff(
+        old_lines, new_lines,
+        fromfile=f"a/{filename}", tofile=f"b/{filename}",
+        n=context,
+    )
+    result = "".join(diff)
+    if len(result) > 3000:
+        result = result[:2500] + "\n... (diff truncated)\n"
+    return result
 
 
 class EditFileTool(BaseTool):
@@ -66,9 +82,10 @@ class EditFileTool(BaseTool):
                 "or set replace_all=true to replace all occurrences."
             )
 
-        new_content = content.replace(old_string, new_string) if replace_all else content.replace(
-            old_string, new_string, 1
-        )
+        if replace_all:
+            new_content = content.replace(old_string, new_string)
+        else:
+            new_content = content.replace(old_string, new_string, 1)
 
         try:
             with open(path, "w", encoding="utf-8") as f:
@@ -77,5 +94,5 @@ class EditFileTool(BaseTool):
             return f"[error] {e}"
 
         _changed_files.add(os.path.abspath(path))
-        replacements = count if replace_all else 1
-        return f"Replaced {replacements} occurrence(s) in {file_path}"
+        diff = _unified_diff(content, new_content, file_path)
+        return f"Edited {file_path}\n{diff}"

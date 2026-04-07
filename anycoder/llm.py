@@ -158,8 +158,8 @@ class LLMClient:
             try:
                 cost = litellm.completion_cost(
                     model=model,
-                    prompt=str(inp),
-                    completion=str(out),
+                    prompt_tokens=inp,
+                    completion_tokens=out,
                 )
                 self.total_cost += cost
             except Exception:

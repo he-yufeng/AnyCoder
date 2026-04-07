@@ -47,10 +47,12 @@ AnyCoder gives you the same experience - file editing, shell commands, codebase 
 - **Agent loop with tool use** - reads files, writes code, runs commands, searches codebases
 - **Streaming output** - see responses as they generate, token by token
 - **Context compression** - auto-compresses when conversations get long (snip tool outputs first, then summarize)
-- **Search & replace editing** - precise modifications with uniqueness checking, not blind overwrites
+- **Search & replace editing** - precise modifications with uniqueness checking and diff output
+- **Dangerous command blocking** - catches `rm -rf /`, fork bombs, `curl | bash`, etc.
+- **Parallel tool execution** - runs multiple independent tool calls concurrently
 - **Session persistence** - save and resume conversations with `/save` and `--resume`
 - **`.env` support** - drop a `.env` in your project root and go
-- **~1,300 lines of Python** - small enough to read, hack, and extend
+- **~1,450 lines of Python** - small enough to read, hack, and extend
 
 ## Installation
 
@@ -136,10 +138,10 @@ AnyCoder has 6 built-in tools that the LLM calls automatically:
 
 | Tool | What it does |
 |------|-------------|
-| `bash` | Run shell commands - tests, git, installs, builds |
+| `bash` | Run shell commands with dangerous command blocking and cd tracking |
 | `read_file` | Read files with line numbers, offset/limit for large files |
 | `write_file` | Create new files or overwrite existing ones |
-| `edit_file` | Search-and-replace edits with uniqueness checking |
+| `edit_file` | Search-and-replace edits with uniqueness checking and diff output |
 | `glob` | Find files by pattern (`**/*.py`, `src/**/*.ts`) |
 | `grep` | Search file contents with regex |
 
@@ -165,22 +167,22 @@ You describe what you want in natural language. The agent decides which tools to
 
 ## Architecture
 
-~1,300 lines total. Here's how it's organized:
+~1,450 lines total. Here's how it's organized:
 
 ```
 anycoder/
 ├── cli.py            REPL + slash commands          258 lines
-├── llm.py            litellm streaming wrapper      185 lines
-├── agent.py          Agent loop + tool execution    151 lines
+├── llm.py            litellm streaming wrapper      184 lines
+├── agent.py          Agent loop + parallel tools    179 lines
 ├── context.py        Two-phase compression           92 lines
 ├── config.py         Env + .env + model aliases      86 lines
 ├── session.py        Save/resume sessions            60 lines
 ├── prompts/system.py System prompt generation        50 lines
 └── tools/
-    ├── bash.py       Shell execution                 56 lines
-    ├── edit_file.py  Search-replace + tracking       81 lines
-    ├── grep_tool.py  Regex content search            84 lines
-    ├── read_file.py  File reading                    58 lines
+    ├── bash.py       Shell + safety + cd tracking   114 lines
+    ├── edit_file.py  Search-replace + diff output    98 lines
+    ├── grep_tool.py  Regex search + skip binary     111 lines
+    ├── read_file.py  File reading + binary detect    70 lines
     ├── glob_tool.py  File pattern search             48 lines
     └── write_file.py File writing + tracking         39 lines
 ```
@@ -233,7 +235,7 @@ agent.run("find all TODO comments in this project")
 | Context compression | Yes | No | Yes | **Yes (two-phase)** |
 | Streaming | Yes | Yes | Yes | **Yes** |
 | Session persistence | Yes | No | Yes | **Yes** |
-| Code size | 512K lines | 100K+ | 50K+ | **~1,300 lines** |
+| Code size | 512K lines | 100K+ | 50K+ | **~1,450 lines** |
 | Best for | Using it | Using it | Using it | **Using it AND reading the source** |
 
 ## Development

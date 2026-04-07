@@ -4,6 +4,16 @@ import os
 from anycoder.tools.base import BaseTool
 
 
+def _is_binary(path: str) -> bool:
+    """Quick check: if the first 512 bytes contain null bytes, it's binary."""
+    try:
+        with open(path, "rb") as f:
+            chunk = f.read(512)
+        return b"\x00" in chunk
+    except OSError:
+        return False
+
+
 class ReadFileTool(BaseTool):
     name = "read_file"
     description = (
@@ -37,6 +47,8 @@ class ReadFileTool(BaseTool):
             return f"[error] File not found: {file_path}"
         if os.path.isdir(path):
             return f"[error] Path is a directory, not a file: {file_path}"
+        if _is_binary(path):
+            return f"[error] Binary file, not readable as text: {file_path}"
 
         try:
             with open(path, "r", encoding="utf-8", errors="replace") as f:
