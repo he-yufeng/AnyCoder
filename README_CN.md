@@ -69,19 +69,28 @@ pip install anycoder
 
 ```bash
 # 设置 API Key（选一个）
-export DEEPSEEK_API_KEY=sk-...    # DeepSeek（默认模型）
+export DEEPSEEK_API_KEY=sk-...    # DeepSeek（默认）
 export OPENAI_API_KEY=sk-...      # OpenAI
 export ANTHROPIC_API_KEY=sk-...   # Claude
 export GEMINI_API_KEY=...         # Gemini
 
-# 启动
+# 用 DeepSeek（默认，便宜好用）
 anycoder
 
-# 指定模型
+# 用 Kimi K2.5
+anycoder -m kimi
+
+# 用 Claude Sonnet 4.6
 anycoder -m claude
+
+# 用 GPT-5.4
 anycoder -m gpt5
-anycoder -m deepseek
+
+# 用 Qwen
 anycoder -m qwen
+
+# 用本地 Ollama，数据不出机器
+anycoder -m ollama/qwen3:32b
 
 # 单次模式
 anycoder "给 auth.py 的登录函数加上错误处理"

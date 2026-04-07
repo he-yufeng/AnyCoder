@@ -69,19 +69,28 @@ pip install anycoder
 
 ```bash
 # Set your API key (pick one)
-export DEEPSEEK_API_KEY=sk-...    # DeepSeek (default model)
+export DEEPSEEK_API_KEY=sk-...    # DeepSeek (default)
 export OPENAI_API_KEY=sk-...      # OpenAI
 export ANTHROPIC_API_KEY=sk-...   # Claude
 export GEMINI_API_KEY=...         # Gemini
 
-# Start the REPL
+# Use DeepSeek (default, cheap and fast)
 anycoder
 
-# Or specify a model
+# Use Kimi K2.5
+anycoder -m kimi
+
+# Use Claude Sonnet 4.6
 anycoder -m claude
+
+# Use GPT-5.4
 anycoder -m gpt5
-anycoder -m deepseek
+
+# Use Qwen
 anycoder -m qwen
+
+# Use local Ollama, data never leaves your machine
+anycoder -m ollama/qwen3:32b
 
 # One-shot mode
 anycoder "add error handling to the login function in auth.py"
