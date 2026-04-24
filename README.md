@@ -263,7 +263,10 @@ pytest tests/ -v
 
 ## Related Projects
 
-- [CoreCoder](https://github.com/he-yufeng/CoreCoder) - my other project: Claude Code's 512K-line source distilled into ~1,400 lines of Python, with 7 architecture deep-dive articles. AnyCoder builds on the same ideas but focuses on being a practical tool (litellm, session persistence, .env support) rather than a teaching codebase.
+- [**CoreCoder**](https://github.com/he-yufeng/CoreCoder) — my other project: Claude Code's 512K-line source distilled into ~1,400 lines of Python, with 7 architecture deep-dive articles. AnyCoder builds on the same ideas but focuses on being a practical tool (litellm, session persistence, .env support) rather than a teaching codebase.
+- [**CodeJoust**](https://github.com/he-yufeng/CodeJoust) — can't decide between Claude Code, aider, and Codex for your bug? CodeJoust races them all in parallel git worktrees, auto-scores by tests / cost / diff / time, hands you the winner's patch. One `pip install codejoust` away.
+- [**LiteBench**](https://github.com/he-yufeng/LiteBench) — one-command LLM / agent benchmark (HumanEval, GSM8K, MMLU, MATH-500, YAML-defined custom tasks). Use it to pick which model your AnyCoder setup should default to.
+- [**RepoWiki**](https://github.com/he-yufeng/RepoWiki) — `pip install repowiki` → one command turns any local or GitHub repo into a wiki with dependency graph + architecture diagram + module pages.
 
 ## License
 
