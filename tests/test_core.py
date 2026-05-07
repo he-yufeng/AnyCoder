@@ -1,7 +1,7 @@
 """Tests for core modules: config, tools, session, context."""
 
 import os
-import tempfile
+import sys
 
 from anycoder import __version__, Agent, LLMClient, Config
 from anycoder.config import MODEL_ALIASES
@@ -56,15 +56,13 @@ def test_tool_schemas():
         assert "description" in s["function"]
 
 
-def test_read_file():
+def test_read_file(tmp_path):
     tool = TOOL_MAP["read_file"]
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
-        f.write("line1\nline2\nline3\n")
-        f.flush()
-        result = tool.execute(file_path=f.name)
-        assert "line1" in result
-        assert "3 lines total" in result
-        os.unlink(f.name)
+    path = tmp_path / "sample.txt"
+    path.write_text("line1\nline2\nline3\n", encoding="utf-8")
+    result = tool.execute(file_path=str(path))
+    assert "line1" in result
+    assert "3 lines total" in result
 
 
 def test_read_file_not_found():
@@ -73,38 +71,35 @@ def test_read_file_not_found():
     assert "[error]" in result
 
 
-def test_write_file():
+def test_write_file(tmp_path):
     tool = TOOL_MAP["write_file"]
-    path = tempfile.mktemp(suffix=".txt")
-    result = tool.execute(file_path=path, content="hello\nworld\n")
+    path = tmp_path / "write.txt"
+    result = tool.execute(file_path=str(path), content="hello\nworld\n")
     assert "Wrote" in result
-    with open(path) as f:
-        assert f.read() == "hello\nworld\n"
-    os.unlink(path)
+    assert path.read_text(encoding="utf-8") == "hello\nworld\n"
 
 
-def test_edit_file():
+def test_edit_file(tmp_path):
     tool = TOOL_MAP["edit_file"]
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
-        f.write("foo = 1\nbar = 2\n")
-        f.flush()
-        result = tool.execute(file_path=f.name, old_string="foo = 1", new_string="foo = 42")
-        assert "Edited" in result
-        with open(f.name) as rf:
-            assert "foo = 42" in rf.read()
-        os.unlink(f.name)
+    path = tmp_path / "sample.py"
+    path.write_text("foo = 1\nbar = 2\n", encoding="utf-8")
+    result = tool.execute(file_path=str(path), old_string="foo = 1", new_string="foo = 42")
+    assert "Edited" in result
+    assert "foo = 42" in path.read_text(encoding="utf-8")
 
 
-def test_edit_file_diff_output():
+def test_edit_file_diff_output(tmp_path):
     tool = TOOL_MAP["edit_file"]
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
-        f.write("hello = 'world'\n")
-        f.flush()
-        result = tool.execute(file_path=f.name, old_string="hello = 'world'", new_string="hello = 'universe'")
-        assert "---" in result and "+++" in result  # unified diff markers
-        assert "-hello = 'world'" in result
-        assert "+hello = 'universe'" in result
-        os.unlink(f.name)
+    path = tmp_path / "diff.py"
+    path.write_text("hello = 'world'\n", encoding="utf-8")
+    result = tool.execute(
+        file_path=str(path),
+        old_string="hello = 'world'",
+        new_string="hello = 'universe'",
+    )
+    assert "---" in result and "+++" in result  # unified diff markers
+    assert "-hello = 'world'" in result
+    assert "+hello = 'universe'" in result
 
 
 def test_edit_file_not_found():
@@ -113,14 +108,12 @@ def test_edit_file_not_found():
     assert "[error]" in result
 
 
-def test_edit_file_unique_check():
+def test_edit_file_unique_check(tmp_path):
     tool = TOOL_MAP["edit_file"]
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
-        f.write("x = 1\nx = 1\n")
-        f.flush()
-        result = tool.execute(file_path=f.name, old_string="x = 1", new_string="x = 2")
-        assert "appears 2 times" in result
-        os.unlink(f.name)
+    path = tmp_path / "dupe.py"
+    path.write_text("x = 1\nx = 1\n", encoding="utf-8")
+    result = tool.execute(file_path=str(path), old_string="x = 1", new_string="x = 2")
+    assert "appears 2 times" in result
 
 
 def test_glob_tool():
@@ -143,33 +136,30 @@ def test_bash_tool():
 
 def test_bash_timeout():
     tool = TOOL_MAP["bash"]
-    result = tool.execute(command="sleep 10", timeout=1)
+    result = tool.execute(command=f'"{sys.executable}" -c "import time; time.sleep(10)"', timeout=1)
     assert "timed out" in result.lower()
 
 
 # --- File change tracking ---
 
-def test_edit_tracks_changes():
+def test_edit_tracks_changes(tmp_path):
     from anycoder.tools.edit_file import _changed_files
     _changed_files.clear()
     tool = TOOL_MAP["edit_file"]
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
-        f.write("aaa\nbbb\n")
-        f.flush()
-        tool.execute(file_path=f.name, old_string="aaa", new_string="zzz")
-        assert len(_changed_files) > 0
-        os.unlink(f.name)
+    path = tmp_path / "tracked.py"
+    path.write_text("aaa\nbbb\n", encoding="utf-8")
+    tool.execute(file_path=str(path), old_string="aaa", new_string="zzz")
+    assert len(_changed_files) > 0
     _changed_files.clear()
 
 
-def test_write_tracks_changes():
+def test_write_tracks_changes(tmp_path):
     from anycoder.tools.edit_file import _changed_files
     _changed_files.clear()
     tool = TOOL_MAP["write_file"]
-    path = tempfile.mktemp(suffix=".txt")
-    tool.execute(file_path=path, content="tracked\n")
+    path = tmp_path / "tracked.txt"
+    tool.execute(file_path=str(path), content="tracked\n")
     assert len(_changed_files) > 0
-    os.unlink(path)
     _changed_files.clear()
 
 
@@ -217,40 +207,38 @@ def test_safe_command_not_blocked():
     assert "Blocked" not in result
 
 
-def test_cd_tracking():
+def test_cd_tracking(tmp_path):
     import anycoder.tools.bash as bash_mod
     old_cwd = bash_mod._cwd
     bash_mod._cwd = None  # reset
 
     tool = TOOL_MAP["bash"]
-    # cd to /tmp should work
-    tool.execute(command="cd /tmp && pwd")
-    assert bash_mod._cwd == "/tmp" or bash_mod._cwd == "/private/tmp"  # macOS /tmp -> /private/tmp
+    command = f'cd "{tmp_path}" && ' + ("cd" if os.name == "nt" else "pwd")
+    tool.execute(command=command)
+    assert os.path.normcase(os.path.abspath(bash_mod._cwd or "")) == os.path.normcase(
+        os.path.abspath(tmp_path)
+    )
 
     bash_mod._cwd = old_cwd  # restore
 
 
 # --- Binary file detection ---
 
-def test_binary_file_rejected():
+def test_binary_file_rejected(tmp_path):
     tool = TOOL_MAP["read_file"]
-    with tempfile.NamedTemporaryFile(suffix=".bin", delete=False) as f:
-        f.write(b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR")
-        f.flush()
-        result = tool.execute(file_path=f.name)
-        assert "Binary file" in result
-        os.unlink(f.name)
+    path = tmp_path / "image.bin"
+    path.write_bytes(b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR")
+    result = tool.execute(file_path=str(path))
+    assert "Binary file" in result
 
 
-def test_text_file_not_rejected():
+def test_text_file_not_rejected(tmp_path):
     tool = TOOL_MAP["read_file"]
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
-        f.write("just plain text\n")
-        f.flush()
-        result = tool.execute(file_path=f.name)
-        assert "Binary" not in result
-        assert "just plain text" in result
-        os.unlink(f.name)
+    path = tmp_path / "plain.txt"
+    path.write_text("just plain text\n", encoding="utf-8")
+    result = tool.execute(file_path=str(path))
+    assert "Binary" not in result
+    assert "just plain text" in result
 
 
 # --- Context compression ---
@@ -323,17 +311,14 @@ def test_context_handles_none_content():
 
 # --- read_file offset/limit ---
 
-def test_read_file_with_offset_limit():
+def test_read_file_with_offset_limit(tmp_path):
     tool = TOOL_MAP["read_file"]
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
-        for i in range(100):
-            f.write(f"line {i}\n")
-        f.flush()
-        result = tool.execute(file_path=f.name, offset=10, limit=5)
-        assert "showing lines 11-15" in result
-        assert "line 10" in result  # 0-indexed line 10 = "line 10"
-        assert "line 0" not in result
-        os.unlink(f.name)
+    path = tmp_path / "long.txt"
+    path.write_text("".join(f"line {i}\n" for i in range(100)), encoding="utf-8")
+    result = tool.execute(file_path=str(path), offset=10, limit=5)
+    assert "showing lines 11-15" in result
+    assert "line 10" in result  # 0-indexed line 10 = "line 10"
+    assert "line 0" not in result
 
 
 # --- grep skips junk dirs ---
