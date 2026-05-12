@@ -177,6 +177,19 @@ def test_session_save_load():
     pathlib.Path.home().joinpath(".anycoder/sessions/pytest_anycoder_test.json").unlink()
 
 
+def test_session_name_is_sanitized():
+    import pathlib
+
+    msgs = [{"role": "user", "content": "test"}]
+    sid = save_session(msgs, "test-model", "../My Notes!")
+
+    assert sid == "My-Notes"
+    session_path = pathlib.Path.home().joinpath(".anycoder/sessions/My-Notes.json")
+    assert session_path.exists()
+    assert load_session("../My Notes!") is not None
+    session_path.unlink()
+
+
 def test_session_not_found():
     assert load_session("nonexistent_session_xyz") is None
 

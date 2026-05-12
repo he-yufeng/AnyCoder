@@ -171,7 +171,7 @@ You describe what you want in natural language. The agent decides which tools to
 | `/tokens` | Token usage and estimated cost |
 | `/diff` | Files modified this session |
 | `/compact` | Manually compress context |
-| `/save [name]` | Save session to disk |
+| `/save [name]` | Save session to disk (names are sanitized before they become filenames) |
 | `/sessions` | List saved sessions |
 | `/clear` | Clear conversation history |
 | `/help` | Show all commands |

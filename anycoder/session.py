@@ -1,10 +1,29 @@
 """Session persistence - save and resume conversations."""
 
 import json
+import re
 import time
 from pathlib import Path
 
 SESSIONS_DIR = Path.home() / ".anycoder" / "sessions"
+_SAFE_SESSION_RE = re.compile(r"[^A-Za-z0-9._-]+")
+
+
+def _normalize_session_id(session_id: str | None) -> str:
+    if not session_id:
+        return f"session_{int(time.time())}"
+
+    name = session_id.strip().replace("\\", "/").split("/")[-1]
+    name = _SAFE_SESSION_RE.sub("-", name).strip(".-_")
+    return name or f"session_{int(time.time())}"
+
+
+def _session_path(session_id: str) -> Path:
+    path = (SESSIONS_DIR / f"{_normalize_session_id(session_id)}.json").resolve()
+    root = SESSIONS_DIR.resolve()
+    if root != path.parent:
+        raise ValueError("Invalid session id")
+    return path
 
 
 def save_session(
@@ -15,8 +34,7 @@ def save_session(
     """Save conversation to disk. Returns the session id."""
     SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
 
-    if not session_id:
-        session_id = f"session_{int(time.time())}"
+    session_id = _normalize_session_id(session_id)
 
     data = {
         "model": model,
@@ -24,14 +42,14 @@ def save_session(
         "saved_at": time.strftime("%Y-%m-%d %H:%M:%S"),
     }
 
-    path = SESSIONS_DIR / f"{session_id}.json"
+    path = _session_path(session_id)
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2))
     return session_id
 
 
 def load_session(session_id: str) -> tuple[list[dict], str] | None:
     """Load a session. Returns (messages, model) or None."""
-    path = SESSIONS_DIR / f"{session_id}.json"
+    path = _session_path(session_id)
     if not path.exists():
         return None
 
