@@ -12,8 +12,10 @@ _cwd_lock = threading.Lock()
 
 # patterns that could wreck the filesystem or leak secrets
 _DANGEROUS_PATTERNS = [
-    (r"\brm\s+(-\w*)?-r\w*\s+(/|~|\$HOME)", "recursive delete on home/root"),
-    (r"\brm\s+(-\w*)?-rf\s", "force recursive delete"),
+    # rm with a recursive flag (-r/-R, any order or case) aimed at home or root
+    (r"\brm\s+(-\w*\s+)*-\w*[rR]\w*\s+(/|~|\$HOME)", "recursive delete on home/root"),
+    # rm with a force+recursive flag cluster in any order or case: -rf, -fr, -Rf, -fR, -rfv...
+    (r"\brm\s+(-\w*\s+)*-(?=\w*[rR])(?=\w*[fF])\w+", "force recursive delete"),
     (r"\bmkfs\b", "format filesystem"),
     (r"\bdd\s+.*of=/dev/", "raw disk write"),
     (r">\s*/dev/sd[a-z]", "overwrite block device"),
@@ -33,17 +35,29 @@ def _check_dangerous(cmd: str) -> str | None:
 
 
 def _update_cwd(command: str, current_cwd: str):
-    """Track directory changes from cd commands."""
+    """Track directory changes from cd commands, including chained ones.
+
+    Each ``cd`` is resolved against the directory the previous ``cd`` landed in,
+    so ``cd a && cd b`` ends in ``a/b`` (not ``b``). A ``cd`` into a missing
+    directory breaks the ``&&`` chain, so later ``cd``s are ignored.
+    """
     global _cwd
+    base = current_cwd
+    resolved = None
     for part in command.split("&&"):
         part = part.strip()
         if part.startswith("cd "):
             target = part[3:].strip().strip("'\"")
-            if target:
-                new_dir = os.path.normpath(os.path.join(current_cwd, os.path.expanduser(target)))
-                if os.path.isdir(new_dir):
-                    with _cwd_lock:
-                        _cwd = new_dir
+            if not target:
+                continue
+            new_dir = os.path.normpath(os.path.join(base, os.path.expanduser(target)))
+            if not os.path.isdir(new_dir):
+                break
+            base = new_dir
+            resolved = new_dir
+    if resolved is not None:
+        with _cwd_lock:
+            _cwd = resolved
 
 
 class BashTool(BaseTool):

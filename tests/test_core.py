@@ -235,6 +235,38 @@ def test_cd_tracking(tmp_path):
     bash_mod._cwd = old_cwd  # restore
 
 
+def test_dangerous_rm_flag_variants_blocked():
+    # Test the pure checker directly — never run rm through the tool.
+    from anycoder.tools.bash import _check_dangerous
+
+    # equivalent forms of `rm -rf` must all be caught, regardless of flag
+    # order or case
+    assert _check_dangerous("rm -rf /") is not None
+    assert _check_dangerous("rm -fr /") is not None
+    assert _check_dangerous("rm -Rf /") is not None
+    assert _check_dangerous("rm -rf ./build") is not None
+    assert _check_dangerous("rm -fr ./build") is not None
+    # non-recursive deletes stay allowed
+    assert _check_dangerous("rm file.txt") is None
+    assert _check_dangerous("rm -f file.txt") is None
+
+
+def test_chained_cd_accumulates(tmp_path):
+    import anycoder.tools.bash as bash_mod
+    from anycoder.tools.bash import _update_cwd
+
+    (tmp_path / "a" / "b").mkdir(parents=True)
+    (tmp_path / "b").mkdir()  # a top-level b too, to expose the old bug
+    old_cwd = bash_mod._cwd
+    bash_mod._cwd = None
+
+    _update_cwd("cd a && cd b", str(tmp_path))
+    # `cd a && cd b` must land in a/b, not the top-level b
+    assert os.path.normpath(bash_mod._cwd or "") == os.path.normpath(str(tmp_path / "a" / "b"))
+
+    bash_mod._cwd = old_cwd  # restore
+
+
 # --- Binary file detection ---
 
 def test_binary_file_rejected(tmp_path):
