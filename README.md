@@ -1,13 +1,17 @@
-# AnyCoder
+<div align="center">
 
-**AI coding agent in your terminal. Works with any LLM.**
+<img src="docs/banner.png" alt="AnyCoder — AI coding agent in your terminal" width="100%">
 
 [![PyPI](https://img.shields.io/pypi/v/anycoder)](https://pypi.org/project/anycoder/)
 [![Python](https://img.shields.io/badge/python-3.10+-blue)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Tests](https://github.com/he-yufeng/AnyCoder/actions/workflows/ci.yml/badge.svg)](https://github.com/he-yufeng/AnyCoder/actions)
 
-[中文文档](README_CN.md) | [Installation](#installation) | [Quick Start](#quick-start) | [Supported Models](#supported-models)
+[**Quick Start**](#quick-start) · [**Models**](#supported-models) · [**Tools**](#built-in-tools) · [中文](README_CN.md)
+
+</div>
+
+<p align="center"><img src="docs/demo.png" alt="anycoder demo" width="540"></p>
 
 DeepSeek, Qwen, GPT-5, Claude, Gemini, Kimi, GLM, Ollama local models - pick your favorite and start coding.
 
