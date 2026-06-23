@@ -272,12 +272,6 @@ pytest tests/ -v
 - [**LiteBench**](https://github.com/he-yufeng/LiteBench) — one-command LLM / agent benchmark (HumanEval, GSM8K, MMLU, MATH-500, YAML-defined custom tasks). Use it to pick which model your AnyCoder setup should default to.
 - [**RepoWiki**](https://github.com/he-yufeng/RepoWiki) — `pip install repowiki` → one command turns any local or GitHub repo into a wiki with dependency graph + architecture diagram + module pages.
 
-## Related projects
-
-- [CoreCoder](https://github.com/he-yufeng/CoreCoder) — a minimal AI coding agent you can read end to end
-- [CodeJoust](https://github.com/he-yufeng/CodeJoust) — pit coding agents against the same bug and score the patches
-- [agentcikit](https://github.com/he-yufeng/agentcikit) — CLI tools for AI-agent, MCP, and CI evidence and safety
-
 ## License
 
 MIT. Use it, fork it, build something better.

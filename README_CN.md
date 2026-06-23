@@ -1,13 +1,17 @@
-# AnyCoder
+<div align="center">
 
-**终端里的 AI 编程 Agent，支持任意大模型。**
+<img src="docs/banner.png" alt="AnyCoder — 终端里的 AI 编程 Agent，支持任意大模型" width="100%">
 
 [![PyPI](https://img.shields.io/pypi/v/anycoder)](https://pypi.org/project/anycoder/)
 [![Python](https://img.shields.io/badge/python-3.10+-blue)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Tests](https://github.com/he-yufeng/AnyCoder/actions/workflows/ci.yml/badge.svg)](https://github.com/he-yufeng/AnyCoder/actions)
 
-[English](README.md) | [中文](README_CN.md) | [安装](#安装) | [快速开始](#快速开始)
+[**快速开始**](#快速开始) · [**支持模型**](#支持的模型) · [**内置工具**](#内置工具) · [English](README.md)
+
+</div>
+
+<p align="center"><img src="docs/demo.png" alt="anycoder demo" width="540"></p>
 
 DeepSeek、Qwen、GPT-5、Claude、Gemini、Kimi、GLM、Ollama 本地模型，选你喜欢的就能开写。
 
