@@ -256,6 +256,17 @@ agent.run("find all TODO comments in this project")
 | Code size | 512K lines | 100K+ | 50K+ | **~1,450 lines** |
 | Best for | Using it | Using it | Using it | **Using it AND reading the source** |
 
+## Roadmap
+
+The point of AnyCoder is that the whole agent fits in your head, so the roadmap is about reach, not heft. Anything added has to stay readable in ~1,500 lines.
+
+- **MCP client support** — let AnyCoder use Model Context Protocol servers as tools, so the same agent can drive whatever an MCP server exposes.
+- **Plan-then-act mode** — show the plan and the files it intends to touch, get one approval, then execute, for people who want a checkpoint before edits land.
+- **Pluggable edit strategies** — search-and-replace is the default; a diff/patch strategy would handle large files and multi-hunk edits more cleanly.
+- **A test-runner tool** — run the project's tests and feed failures back into the loop, so "fix until green" is a first-class flow rather than manual.
+
+If a feature can't be added without making the source hard to read end to end, it doesn't belong here. That's the whole pitch.
+
 ## Development
 
 ```bash
