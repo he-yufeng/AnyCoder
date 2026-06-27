@@ -280,7 +280,11 @@ pytest tests/ -v
 
 ## 相关项目
 
-- [CoreCoder](https://github.com/he-yufeng/CoreCoder) - 我的另一个项目：Claude Code 51 万行源码浓缩成 ~1,400 行 Python，附 7 篇架构深度解读。AnyCoder 基于同样的思路，但更注重实用（litellm 多模型、会话持久化、.env 支持），而非教学。
+AnyCoder 是我做的 coding agent 项目之一，下面几个也值得一看：
+
+- **[CoreCoder](https://github.com/he-yufeng/CoreCoder)** — 想搞懂一个 coding agent 到底怎么运作？把整套约 1000 行引擎从头读到尾，而不是当黑箱。
+- **[CodeABC](https://github.com/he-yufeng/CodeABC)** — 不会写代码也能看懂一个项目，专给小白做的。
+- **[CodeJoust](https://github.com/he-yufeng/CodeJoust)** — 哪个 coding agent 最会修你的 bug？让 Claude Code、aider、Codex、Gemini 同场竞速，给冠军打分。
 
 ## License
 

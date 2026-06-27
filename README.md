@@ -278,10 +278,11 @@ pytest tests/ -v
 
 ## Related Projects
 
-- [**CoreCoder**](https://github.com/he-yufeng/CoreCoder) — my other project: Claude Code's 512K-line source distilled into ~1,400 lines of Python, with 7 architecture deep-dive articles. AnyCoder builds on the same ideas but focuses on being a practical tool (litellm, session persistence, .env support) rather than a teaching codebase.
-- [**CodeJoust**](https://github.com/he-yufeng/CodeJoust) — can't decide between Claude Code, aider, Codex, and Gemini for your bug? CodeJoust races all four in parallel git worktrees, auto-scores by tests / cost / diff / time, hands you the winner's patch. One `pip install codejoust` away.
-- [**LiteBench**](https://github.com/he-yufeng/LiteBench) — one-command LLM / agent benchmark (HumanEval, GSM8K, MMLU, MATH-500, YAML-defined custom tasks). Use it to pick which model your AnyCoder setup should default to.
-- [**RepoWiki**](https://github.com/he-yufeng/RepoWiki) — `pip install repowiki` → one command turns any local or GitHub repo into a wiki with dependency graph + architecture diagram + module pages.
+AnyCoder is one of my coding-agent projects. A few others worth a look:
+
+- **[CoreCoder](https://github.com/he-yufeng/CoreCoder)** — want to understand how a coding agent really works? Read the whole ~1k-line engine end to end, not a black box.
+- **[CodeABC](https://github.com/he-yufeng/CodeABC)** — understand any codebase even if you don't code, built for non-programmers.
+- **[CodeJoust](https://github.com/he-yufeng/CodeJoust)** — which coding agent fixes your bug best? Race Claude Code, aider, Codex and Gemini, and score the winner.
 
 ## License
 
