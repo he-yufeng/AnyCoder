@@ -2,6 +2,8 @@
 
 import difflib
 import os
+from typing import ClassVar
+
 from anycoder.tools.base import BaseTool
 
 # track which files got modified this session
@@ -30,7 +32,7 @@ class EditFileTool(BaseTool):
         "The old_string must appear exactly once in the file (unless replace_all is true). "
         "Prefer this over write_file for modifying existing files."
     )
-    parameters = {
+    parameters: ClassVar[dict] = {
         "type": "object",
         "properties": {
             "file_path": {
@@ -65,7 +67,7 @@ class EditFileTool(BaseTool):
         try:
             with open(path, "r", encoding="utf-8") as f:
                 content = f.read()
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             return f"[error] {e}"
 
         count = content.count(old_string)
@@ -90,7 +92,7 @@ class EditFileTool(BaseTool):
         try:
             with open(path, "w", encoding="utf-8") as f:
                 f.write(new_content)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             return f"[error] {e}"
 
         _changed_files.add(os.path.abspath(path))

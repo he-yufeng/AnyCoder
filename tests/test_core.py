@@ -3,10 +3,10 @@
 import os
 import sys
 
-from anycoder import __version__, Agent, LLMClient, Config
+from anycoder import Agent, Config, LLMClient, __version__
 from anycoder.config import MODEL_ALIASES
+from anycoder.session import list_sessions, load_session, save_session
 from anycoder.tools import ALL_TOOLS, TOOL_MAP, get_tool_schemas
-from anycoder.session import save_session, load_session, list_sessions
 
 
 def test_version():
@@ -290,7 +290,7 @@ def test_text_file_not_rejected(tmp_path):
 
 def test_context_snip_tool_outputs():
     """Tool outputs longer than threshold should be truncated."""
-    from anycoder.context import ContextManager, _TOOL_SNIP_THRESHOLD
+    from anycoder.context import _TOOL_SNIP_THRESHOLD, ContextManager
 
     class FakeLLM:
         def count_tokens(self, messages):

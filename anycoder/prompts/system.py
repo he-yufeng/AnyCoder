@@ -8,7 +8,7 @@ from datetime import datetime
 def build_system_prompt() -> str:
     """Generate system prompt with current environment context."""
     cwd = os.getcwd()
-    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    now = datetime.now().astimezone().strftime("%Y-%m-%d %H:%M")
     system = platform.system()
     py_version = platform.python_version()
 

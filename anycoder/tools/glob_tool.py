@@ -1,7 +1,9 @@
 """Find files by glob pattern."""
 
-import os
 import glob as globlib
+import os
+from typing import ClassVar
+
 from anycoder.tools.base import BaseTool
 
 
@@ -11,7 +13,7 @@ class GlobTool(BaseTool):
         "Find files matching a glob pattern. "
         "Supports patterns like '**/*.py', 'src/**/*.ts', '*.json'."
     )
-    parameters = {
+    parameters: ClassVar[dict] = {
         "type": "object",
         "properties": {
             "pattern": {
@@ -33,7 +35,7 @@ class GlobTool(BaseTool):
 
         try:
             matches = sorted(globlib.glob(full_pattern, recursive=True))
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             return f"[error] {e}"
 
         if not matches:

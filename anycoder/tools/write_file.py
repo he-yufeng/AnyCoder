@@ -1,6 +1,8 @@
 """Create or overwrite a file."""
 
 import os
+from typing import ClassVar
+
 from anycoder.tools.base import BaseTool
 from anycoder.tools.edit_file import _changed_files
 
@@ -11,7 +13,7 @@ class WriteFileTool(BaseTool):
         "Create a new file or completely overwrite an existing file. "
         "Use edit_file for partial modifications to existing files."
     )
-    parameters = {
+    parameters: ClassVar[dict] = {
         "type": "object",
         "properties": {
             "file_path": {
@@ -35,5 +37,5 @@ class WriteFileTool(BaseTool):
             _changed_files.add(os.path.abspath(path))
             line_count = content.count("\n") + (1 if content and not content.endswith("\n") else 0)
             return f"Wrote {line_count} lines to {file_path}"
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             return f"[error] {e}"

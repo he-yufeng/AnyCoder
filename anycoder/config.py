@@ -6,7 +6,6 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-
 # load .env from cwd first, then from ~/.anycoder/
 load_dotenv(Path.cwd() / ".env", override=False)
 load_dotenv(Path.home() / ".anycoder" / ".env", override=False)

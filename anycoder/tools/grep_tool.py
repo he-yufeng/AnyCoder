@@ -3,6 +3,8 @@
 import os
 import re
 from pathlib import Path
+from typing import ClassVar
+
 from anycoder.tools.base import BaseTool
 
 # dirs that just add noise to search results
@@ -24,7 +26,7 @@ class GrepTool(BaseTool):
         "Search for a regex pattern in file contents. "
         "Returns matching lines with file paths and line numbers."
     )
-    parameters = {
+    parameters: ClassVar[dict] = {
         "type": "object",
         "properties": {
             "pattern": {

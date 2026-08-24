@@ -1,7 +1,7 @@
 """LLM abstraction layer - supports 100+ providers via litellm."""
 
 import json
-from typing import Generator
+from collections.abc import Generator
 
 import litellm
 from litellm import completion, token_counter
@@ -143,7 +143,7 @@ class LLMClient:
             try:
                 cost = litellm.completion_cost(response)
                 self.total_cost += cost
-            except Exception:
+            except Exception:  # noqa: BLE001
                 cost = 0.0
             yield {"type": "usage", "input_tokens": inp, "output_tokens": out, "cost": cost}
 
@@ -162,16 +162,17 @@ class LLMClient:
                     completion_tokens=out,
                 )
                 self.total_cost += cost
-            except Exception:
+            except Exception:  # noqa: BLE001, S110
+                # cost tracking is best-effort, never break a call over it
                 pass
-        except Exception:
+        except Exception:  # noqa: BLE001, S110
             pass
 
     def count_tokens(self, messages: list) -> int:
         """Count tokens in a message list."""
         try:
             return token_counter(model=self.model, messages=messages)
-        except Exception:
+        except Exception:  # noqa: BLE001
             # rough fallback: ~4 chars per token
             total_chars = sum(len(str(m.get("content", ""))) for m in messages)
             return total_chars // 4

@@ -3,6 +3,8 @@
 import json
 import os
 import subprocess
+from typing import ClassVar
+
 from anycoder.tools.base import BaseTool
 
 
@@ -58,7 +60,7 @@ class RunTestsTool(BaseTool):
         "Detects pytest (Python) or npm/pnpm/yarn test (Node) automatically. "
         "Use after changing code: if anything fails, fix it and re-run until green."
     )
-    parameters = {
+    parameters: ClassVar[dict] = {
         "type": "object",
         "properties": {
             "path": {
@@ -89,12 +91,12 @@ class RunTestsTool(BaseTool):
 
         try:
             result = subprocess.run(
-                cmd, shell=True, capture_output=True, text=True,
+                cmd, shell=True, check=False, capture_output=True, text=True,
                 timeout=timeout, cwd=path,
             )
         except subprocess.TimeoutExpired:
             return f"[error] Tests timed out after {timeout}s (`{cmd}`)"
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             return f"[error] {e}"
 
         out = result.stdout or ""

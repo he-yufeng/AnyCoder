@@ -4,6 +4,8 @@ import os
 import re
 import subprocess
 import threading
+from typing import ClassVar
+
 from anycoder.tools.base import BaseTool
 
 # track cwd across commands so `cd src && ls` works as expected
@@ -66,7 +68,7 @@ class BashTool(BaseTool):
         "Execute a shell command and return its output. "
         "Use for running tests, installing packages, git operations, etc."
     )
-    parameters = {
+    parameters: ClassVar[dict] = {
         "type": "object",
         "properties": {
             "command": {
@@ -99,6 +101,7 @@ class BashTool(BaseTool):
             result = subprocess.run(
                 command,
                 shell=True,
+                check=False,
                 capture_output=True,
                 text=True,
                 timeout=timeout,
@@ -126,5 +129,5 @@ class BashTool(BaseTool):
 
         except subprocess.TimeoutExpired:
             return f"[error] Command timed out after {timeout}s"
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             return f"[error] {e}"

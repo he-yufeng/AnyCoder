@@ -3,17 +3,16 @@
 import argparse
 import os
 
-from rich.console import Console
 from prompt_toolkit import PromptSession
-from prompt_toolkit.history import FileHistory
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
+from prompt_toolkit.history import FileHistory
 from prompt_toolkit.key_binding import KeyBindings
+from rich.console import Console
 
 from anycoder import __version__
-from anycoder.config import Config, MODEL_ALIASES
 from anycoder.agent import Agent
-from anycoder.session import save_session, load_session, list_sessions
-
+from anycoder.config import MODEL_ALIASES, Config
+from anycoder.session import list_sessions, load_session, save_session
 
 console = Console()
 
@@ -141,16 +140,16 @@ def main():
             continue
 
         # slash commands
-        if user_input.startswith("/"):
-            if _handle_command(user_input, config, agent):
-                continue
+        if user_input.startswith("/") and _handle_command(user_input, config, agent):
+            continue
 
         # run the agent
         try:
             agent.run(user_input)
         except KeyboardInterrupt:
             console.print("\n[yellow]Cancelled[/yellow]")
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
+            # one bad turn shouldn't kill the REPL
             console.print(f"\n[red]Error: {e}[/red]")
 
         # status bar

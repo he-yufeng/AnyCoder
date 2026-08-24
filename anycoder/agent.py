@@ -1,17 +1,16 @@
 """Core agent loop - the brain that ties LLM, tools, and context together."""
 
-import json
 import concurrent.futures
+import json
 
 from rich.console import Console
 from rich.panel import Panel
 
-from anycoder.llm import LLMClient
-from anycoder.context import ContextManager
 from anycoder.config import Config
-from anycoder.tools import TOOL_MAP, get_tool_schemas
+from anycoder.context import ContextManager
+from anycoder.llm import LLMClient
 from anycoder.prompts.system import build_system_prompt
-
+from anycoder.tools import TOOL_MAP, get_tool_schemas
 
 console = Console()
 
@@ -61,7 +60,8 @@ class Agent:
                         response_text += chunk["content"]
                     elif chunk["type"] == "tool_call":
                         tool_calls = chunk["calls"]
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
+                # provider exceptions come in every shape, surface and bail out
                 console.print(f"\n[red]LLM error: {e}[/red]")
                 # still record what we got
                 if response_text:
@@ -114,7 +114,8 @@ class Agent:
             self._print_tool_header(name, args)
             try:
                 result = tool.execute(**args)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
+                # a broken tool must never crash the loop
                 result = f"[error] Tool execution failed: {e}"
             self._print_tool_result(name, result)
 
@@ -136,7 +137,7 @@ class Agent:
                 return f"[error] Unknown tool: {tc['name']}"
             try:
                 return tool.execute(**tc["arguments"])
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 return f"[error] Tool execution failed: {e}"
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:

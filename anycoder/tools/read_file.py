@@ -1,6 +1,8 @@
 """Read file contents with optional line range."""
 
 import os
+from typing import ClassVar
+
 from anycoder.tools.base import BaseTool
 
 
@@ -20,7 +22,7 @@ class ReadFileTool(BaseTool):
         "Read the contents of a file. Returns line-numbered output. "
         "Use offset and limit to read specific portions of large files."
     )
-    parameters = {
+    parameters: ClassVar[dict] = {
         "type": "object",
         "properties": {
             "file_path": {
@@ -53,7 +55,7 @@ class ReadFileTool(BaseTool):
         try:
             with open(path, "r", encoding="utf-8", errors="replace") as f:
                 lines = f.readlines()
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             return f"[error] {e}"
 
         total = len(lines)
