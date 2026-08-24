@@ -6,6 +6,7 @@ from anycoder.tools.write_file import WriteFileTool
 from anycoder.tools.edit_file import EditFileTool
 from anycoder.tools.glob_tool import GlobTool
 from anycoder.tools.grep_tool import GrepTool
+from anycoder.tools.run_tests import RunTestsTool
 
 ALL_TOOLS = [
     BashTool(),
@@ -14,6 +15,7 @@ ALL_TOOLS = [
     EditFileTool(),
     GlobTool(),
     GrepTool(),
+    RunTestsTool(),
 ]
 
 TOOL_MAP = {tool.name: tool for tool in ALL_TOOLS}

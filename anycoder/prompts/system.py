@@ -34,6 +34,7 @@ You have access to tools for reading, writing, editing files, running shell comm
 - **edit_file**: Search-and-replace edits (preferred for modifications). Returns a unified diff showing what changed.
 - **glob**: Find files by name pattern
 - **grep**: Search file contents with regex. Skips binary files and .git/node_modules directories.
+- **run_tests**: Run the project's tests (auto-detects pytest or npm/pnpm/yarn). After edits, run it and fix any failures until the suite is green.
 
 ## Safety
 

@@ -152,7 +152,7 @@ anycoder -m your-model-name
 
 ## Tools
 
-AnyCoder has 6 built-in tools that the LLM calls automatically:
+AnyCoder has 7 built-in tools that the LLM calls automatically:
 
 | Tool | What it does |
 |------|-------------|
@@ -162,6 +162,7 @@ AnyCoder has 6 built-in tools that the LLM calls automatically:
 | `edit_file` | Search-and-replace edits with uniqueness checking and diff output |
 | `glob` | Find files by pattern (`**/*.py`, `src/**/*.ts`) |
 | `grep` | Search file contents with regex |
+| `run_tests` | Detect and run the project's tests (pytest, npm/pnpm/yarn) and report failures |
 
 You describe what you want in natural language. The agent decides which tools to use.
 
@@ -185,7 +186,7 @@ You describe what you want in natural language. The agent decides which tools to
 
 ## Architecture
 
-~1,450 lines total. Here's how it's organized:
+~1,600 lines total. Here's how it's organized:
 
 ```
 anycoder/
@@ -194,12 +195,13 @@ anycoder/
 ├── agent.py          Agent loop + parallel tools    179 lines
 ├── context.py        Two-phase compression           92 lines
 ├── config.py         Env + .env + model aliases      86 lines
-├── session.py        Save/resume sessions            60 lines
-├── prompts/system.py System prompt generation        50 lines
+├── session.py        Save/resume sessions            83 lines
+├── prompts/system.py System prompt generation        51 lines
 └── tools/
-    ├── bash.py       Shell + safety + cd tracking   114 lines
+    ├── bash.py       Shell + safety + cd tracking   130 lines
     ├── edit_file.py  Search-replace + diff output    98 lines
     ├── grep_tool.py  Regex search + skip binary     111 lines
+    ├── run_tests.py  Detect and run project tests   113 lines
     ├── read_file.py  File reading + binary detect    70 lines
     ├── glob_tool.py  File pattern search             48 lines
     └── write_file.py File writing + tracking         39 lines
@@ -253,7 +255,7 @@ agent.run("find all TODO comments in this project")
 | Context compression | Yes | No | Yes | **Yes (two-phase)** |
 | Streaming | Yes | Yes | Yes | **Yes** |
 | Session persistence | Yes | No | Yes | **Yes** |
-| Code size | 512K lines | 100K+ | 50K+ | **~1,450 lines** |
+| Code size | 512K lines | 100K+ | 50K+ | **~1,600 lines** |
 | Best for | Using it | Using it | Using it | **Using it AND reading the source** |
 
 ## Roadmap
@@ -263,7 +265,6 @@ The point of AnyCoder is that the whole agent fits in your head, so the roadmap 
 - **MCP client support** — let AnyCoder use Model Context Protocol servers as tools, so the same agent can drive whatever an MCP server exposes.
 - **Plan-then-act mode** — show the plan and the files it intends to touch, get one approval, then execute, for people who want a checkpoint before edits land.
 - **Pluggable edit strategies** — search-and-replace is the default; a diff/patch strategy would handle large files and multi-hunk edits more cleanly.
-- **A test-runner tool** — run the project's tests and feed failures back into the loop, so "fix until green" is a first-class flow rather than manual.
 
 If a feature can't be added without making the source hard to read end to end, it doesn't belong here. That's the whole pitch.
 
