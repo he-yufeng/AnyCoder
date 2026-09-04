@@ -175,6 +175,7 @@ You describe what you want in natural language. The agent decides which tools to
 | `/models` | List all model aliases |
 | `/tokens` | Token usage and estimated cost |
 | `/diff` | Files modified this session |
+| `/undo` | Revert the most recent file change |
 | `/compact` | Manually compress context |
 | `/save [name]` | Save session to disk (names are sanitized before they become filenames) |
 | `/sessions` | List saved sessions |

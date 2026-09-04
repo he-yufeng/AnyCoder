@@ -3,6 +3,7 @@
 import os
 from typing import ClassVar
 
+from anycoder.checkpoints import record as _record_checkpoint
 from anycoder.tools.base import BaseTool
 from anycoder.tools.edit_file import _changed_files
 
@@ -32,6 +33,7 @@ class WriteFileTool(BaseTool):
         path = os.path.expanduser(file_path)
         try:
             os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+            _record_checkpoint(path)
             with open(path, "w", encoding="utf-8") as f:
                 f.write(content)
             _changed_files.add(os.path.abspath(path))

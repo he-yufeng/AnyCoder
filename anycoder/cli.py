@@ -169,6 +169,7 @@ def _handle_command(cmd: str, config: Config, agent: Agent) -> bool:
   /models          List all model aliases
   /tokens          Token usage and cost estimate
   /diff            Files modified this session
+  /undo            Revert the most recent file change
   /compact         Compress conversation context
   /save [name]     Save session
   /sessions        List saved sessions
@@ -240,6 +241,14 @@ def _handle_command(cmd: str, config: Config, agent: Agent) -> bool:
                     f"  {s['id']:<30s}  {s['model']:<24s}  "
                     f"{s['messages']} msgs  {s['saved_at']}"
                 )
+        return True
+
+    if command == "/undo":
+        from anycoder.checkpoints import pending, undo
+        console.print(undo())
+        left = pending()
+        if left:
+            console.print(f"[dim]{left} more checkpoint(s) on the stack.[/dim]")
         return True
 
     if command == "/clear":

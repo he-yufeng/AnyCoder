@@ -9,6 +9,8 @@ from anycoder.tools.base import BaseTool
 # track which files got modified this session
 _changed_files: set[str] = set()
 
+from anycoder.checkpoints import record as _record_checkpoint
+
 
 def _unified_diff(old: str, new: str, filename: str, context: int = 3) -> str:
     """Generate a compact unified diff."""
@@ -90,6 +92,7 @@ class EditFileTool(BaseTool):
             new_content = content.replace(old_string, new_string, 1)
 
         try:
+            _record_checkpoint(path)
             with open(path, "w", encoding="utf-8") as f:
                 f.write(new_content)
         except Exception as e:  # noqa: BLE001
