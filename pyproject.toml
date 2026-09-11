@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "anycoder"
-version = "0.2.0"
+version = "0.3.0"
 description = "AI coding agent CLI that works with any LLM - DeepSeek, Qwen, GPT, Claude, Gemini, local models, you name it"
 readme = "README.md"
 license = "MIT"
