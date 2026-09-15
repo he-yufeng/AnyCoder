@@ -63,6 +63,7 @@ class Config:
     max_tokens: int = 128_000
     compress_threshold: float = 0.7
     max_iterations: int = 50
+    plan_mode: bool = False
 
     @classmethod
     def from_env(cls) -> "Config":

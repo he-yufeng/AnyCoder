@@ -2,9 +2,11 @@
 
 import concurrent.futures
 import json
+import sys
 
 from rich.console import Console
 from rich.panel import Panel
+from rich.prompt import Prompt
 
 from anycoder.config import Config
 from anycoder.context import ContextManager
@@ -13,6 +15,9 @@ from anycoder.prompts.system import build_system_prompt
 from anycoder.tools import TOOL_MAP, get_tool_schemas
 
 console = Console()
+
+# plan mode gates these; read-only tools always pass
+_MUTATING_TOOLS = {"edit_file", "write_file", "bash"}
 
 
 class Agent:
@@ -92,13 +97,55 @@ class Agent:
             ]
             self.ctx.add(assistant_msg)
 
+            # plan mode may decline mutating calls; declined ones are answered
+            # in place so the model sees the rejection and replans
+            tool_calls = self._gate_tool_calls(tool_calls)
+
             # execute tools (parallel when multiple, like Claude Code's StreamingToolExecutor)
             if len(tool_calls) == 1:
                 self._execute_tool(tool_calls[0])
-            else:
+            elif tool_calls:
                 self._execute_tools_parallel(tool_calls)
 
         console.print(f"[yellow]Hit iteration limit ({self.config.max_iterations})[/yellow]")
+
+    def _gate_tool_calls(self, tool_calls: list[dict]) -> list[dict]:
+        """Plan-mode approval gate for mutating tools.
+
+        Approved calls come back for execution; declined mutating calls are
+        answered in place with a synthetic result so the model sees the
+        rejection and replans, instead of the step vanishing silently.
+        """
+        if not self.config.plan_mode:
+            return tool_calls
+        mutating = [tc for tc in tool_calls if tc["name"] in _MUTATING_TOOLS]
+        if not mutating:
+            return tool_calls
+
+        lines = []
+        for tc in mutating:
+            args = tc["arguments"]
+            if tc["name"] == "bash":
+                lines.append(f"  $ {args.get('command', '')}")
+            else:
+                verb = "Edit" if tc["name"] == "edit_file" else "Write"
+                lines.append(f"  {verb} {args.get('file_path', '')}")
+        console.print(Panel("\n".join(lines), title="[bold]Planned changes[/bold]", border_style="yellow", expand=False))
+
+        if not sys.stdin.isatty():
+            console.print("[dim][plan] auto-approved (non-interactive stdin)[/dim]")
+            return tool_calls
+        answer = Prompt.ask("Apply these changes?", choices=["y", "n"], default="y")
+        if answer == "y":
+            return tool_calls
+
+        for tc in mutating:
+            self.ctx.add({
+                "role": "tool",
+                "tool_call_id": tc["id"],
+                "content": "[declined by user: the step was not executed. Adjust the plan and continue.]",
+            })
+        return [tc for tc in tool_calls if tc["name"] not in _MUTATING_TOOLS]
 
     def _execute_tool(self, tool_call: dict):
         """Run a single tool call and add the result to context."""

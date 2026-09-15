@@ -59,6 +59,10 @@ Examples:
         help="One-shot prompt (skip interactive mode)",
     )
     parser.add_argument(
+        "--plan", action="store_true",
+        help="Plan mode: review and approve mutating tool calls before they run",
+    )
+    parser.add_argument(
         "prompt_positional", nargs="*",
         help="One-shot prompt (alternative to -p)",
     )
@@ -75,6 +79,8 @@ def main():
         config.api_base = args.api_base
     if args.api_key:
         config.api_key = args.api_key
+    if args.plan:
+        config.plan_mode = True
 
     agent = Agent(config)
 
@@ -170,6 +176,7 @@ def _handle_command(cmd: str, config: Config, agent: Agent) -> bool:
   /tokens          Token usage and cost estimate
   /diff            Files modified this session
   /undo            Revert the most recent file change
+  /plan            Toggle plan mode (approve mutating tool calls before they run)
   /compact         Compress conversation context
   /save [name]     Save session
   /sessions        List saved sessions
@@ -223,6 +230,12 @@ def _handle_command(cmd: str, config: Config, agent: Agent) -> bool:
         console.print("[dim]Compressing context...[/dim]")
         agent.ctx.compress()
         console.print(f"[dim]Done. Context: ~{agent.ctx.token_count:,} tokens[/dim]")
+        return True
+
+    if command == "/plan":
+        config.plan_mode = not config.plan_mode
+        state = "on" if config.plan_mode else "off"
+        console.print(f"Plan mode [bold]{state}[/bold]: mutating tool calls will {'ask for approval' if config.plan_mode else 'run without asking'}.")
         return True
 
     if command == "/save":
