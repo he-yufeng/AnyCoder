@@ -44,12 +44,12 @@ def test_model_aliases_non_empty():
 # --- Tools ---
 
 def test_all_tools_loaded():
-    assert len(ALL_TOOLS) == 7
+    assert len(ALL_TOOLS) == 8
 
 
 def test_tool_schemas():
     schemas = get_tool_schemas()
-    assert len(schemas) == 7
+    assert len(schemas) == 8
     for s in schemas:
         assert s["type"] == "function"
         assert "name" in s["function"]

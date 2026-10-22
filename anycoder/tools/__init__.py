@@ -1,5 +1,6 @@
 """Tool registry - all available tools for the agent."""
 
+from anycoder.tools.apply_patch import ApplyPatchTool
 from anycoder.tools.bash import BashTool
 from anycoder.tools.edit_file import EditFileTool
 from anycoder.tools.glob_tool import GlobTool
@@ -13,6 +14,7 @@ ALL_TOOLS = [
     ReadFileTool(),
     WriteFileTool(),
     EditFileTool(),
+    ApplyPatchTool(),
     GlobTool(),
     GrepTool(),
     RunTestsTool(),

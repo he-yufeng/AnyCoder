@@ -152,7 +152,7 @@ anycoder -m your-model-name
 
 ## Tools
 
-AnyCoder has 7 built-in tools that the LLM calls automatically:
+AnyCoder has 8 built-in tools that the LLM calls automatically:
 
 | Tool | What it does |
 |------|-------------|
@@ -160,6 +160,7 @@ AnyCoder has 7 built-in tools that the LLM calls automatically:
 | `read_file` | Read files with line numbers, offset/limit for large files |
 | `write_file` | Create new files or overwrite existing ones |
 | `edit_file` | Search-and-replace edits with uniqueness checking and diff output |
+| `apply_patch` | Multi-block anchored patches, applied atomically (all blocks match or nothing is written) |
 | `glob` | Find files by pattern (`**/*.py`, `src/**/*.ts`) |
 | `grep` | Search file contents with regex |
 | `run_tests` | Detect and run the project's tests (pytest, npm/pnpm/yarn) and report failures |
@@ -265,8 +266,8 @@ agent.run("find all TODO comments in this project")
 The point of AnyCoder is that the whole agent fits in your head, so the roadmap is about reach, not heft. Anything added has to stay readable in ~1,500 lines.
 
 - **MCP client support** — let AnyCoder use Model Context Protocol servers as tools, so the same agent can drive whatever an MCP server exposes.
-- **Plan-then-act mode** — show the plan and the files it intends to touch, get one approval, then execute, for people who want a checkpoint before edits land.
-- **Pluggable edit strategies** — search-and-replace is the default; a diff/patch strategy would handle large files and multi-hunk edits more cleanly.
+- ~~Plan-then-act mode~~ — shipped: `--plan` (or `/plan` mid-session) pauses every mutating call on a "Planned changes" panel for one approval; declining answers the call in place so the model replans.
+- ~~Pluggable edit strategies~~ — shipped: `edit_file` covers single search-and-replace hunks, and `apply_patch` takes several anchored blocks and applies them atomically for multi-hunk edits.
 
 If a feature can't be added without making the source hard to read end to end, it doesn't belong here. That's the whole pitch.
 
